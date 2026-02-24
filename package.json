@@ -1,0 +1,20 @@
+{
+  "name": "loan-collection-manager",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn workspace @lcm/api start:dev\" \"yarn workspace @lcm/web dev\"",
+    "dev:api": "yarn workspace @lcm/api start:dev",
+    "dev:web": "yarn workspace @lcm/web dev",
+    "build": "yarn workspaces run build",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  }
+}
