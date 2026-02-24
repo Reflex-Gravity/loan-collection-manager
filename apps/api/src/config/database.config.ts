@@ -6,10 +6,10 @@ export default registerAs(
   (): TypeOrmModuleOptions => ({
     type: 'postgres', // Change to your DB driver
     host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
+    username: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD,
+    database: process.env.POSTGRES_DB,
 
     entities: ['dist/**/*.entity{.ts,.js}'],
     migrations: ['dist/migrations/*{.ts,.js}'],
