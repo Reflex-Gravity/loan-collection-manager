@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migration:run": "ts-node -r tsconfig-paths/register src/db/run-migrations.ts",
     "migration:revert": "typeorm-ts-node-commonjs -d ./src/db/data-source.ts migration:revert",
-    "migration:generate": "typeorm-ts-node-commonjs -d ./src/db/data-source.ts migration:generate src/db/migrations/InitialSchema"
+    "migration:generate": "typeorm-ts-node-commonjs -d ./src/db/data-source.ts migration:generate src/db/migrations/InitialSchema",
+    "seed": "ts-node -r tsconfig-paths/register src/db/seed.ts"
   },
   "dependencies": {
     "@lcm/shared": "*",

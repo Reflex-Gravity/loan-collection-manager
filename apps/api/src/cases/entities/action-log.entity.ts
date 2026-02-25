@@ -1,6 +1,7 @@
 import { ActionOutcome, ActionType } from '@lcm/shared';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -8,7 +9,7 @@ import {
 } from 'typeorm';
 import { Case } from './case.entity';
 
-@Entity('actions-logs')
+@Entity('action_logs')
 export class ActionLog {
   @PrimaryGeneratedColumn()
   id!: number;
@@ -25,7 +26,7 @@ export class ActionLog {
   @Column({ type: 'text', nullable: true })
   notes!: string;
 
-  @Column({ name: 'created_at', type: 'timestamptz' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 
   @ManyToOne(() => Case, (caseIns) => caseIns.actionLogs)

@@ -1,10 +1,12 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Customer } from '../../customers/customer.entity';
 import { Loan } from '../../loan/loan.entity';
@@ -12,7 +14,7 @@ import { CaseStage, CaseStatus } from '@lcm/shared';
 import { ActionLog } from './action-log.entity';
 import { RuleDecision } from './rule-decision.entity';
 
-@Entity('case')
+@Entity('cases')
 export class Case {
   @PrimaryGeneratedColumn()
   id!: number;
@@ -35,10 +37,10 @@ export class Case {
   @Column({ name: 'assigned_to', nullable: true })
   assignedTo!: string;
 
-  @Column({ name: 'created_at', type: 'timestamptz' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 
-  @Column({ name: 'updated_at', type: 'timestamptz' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;
 
   // relations
