@@ -40,6 +40,9 @@ export class Case {
   @Column({ name: 'assigned_to', nullable: true })
   assignedTo!: string;
 
+  @Column({ name: 'assigned_group', nullable: true })
+  assignedGroup!: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 
