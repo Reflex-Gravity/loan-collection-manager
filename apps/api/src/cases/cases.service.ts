@@ -13,6 +13,7 @@ import { AddActionDto } from './dto/add-case-actions';
 import { ActionOutcome, CaseStatus } from '@lcm/shared';
 import { ActionLog } from './entities/action-log.entity';
 import { RuleDecision } from './entities/rule-decision.entity';
+import { differenceInDays } from '../common/utils/utils';
 
 @Injectable()
 export class CaseService {
@@ -49,12 +50,21 @@ export class CaseService {
       throw new BadRequestException(`Loan doesn't belong to the customer`);
     }
 
-    // const dpd =
-    this.caseRespository.create({
+    const dpd = Math.max(0, differenceInDays(new Date(), loan.dueDate));
+
+    const caseRecord = this.caseRespository.create({
       customerId: dto.customerId,
       loanId: dto.loanId,
-      dpd: 7,
+      dpd,
     });
+    const saved = await this.caseRespository.save(caseRecord);
+
+    const result = await this.caseRespository.findOne({
+      where: { id: saved.id },
+      relations: { customer: true, loan: true },
+    });
+
+    return result;
   }
 
   async findAll(filters: ListCaseDto) {
@@ -89,7 +99,7 @@ export class CaseService {
     if (otherFilters.dpdMax !== undefined)
       qb.andWhere('c.dpd <= :dpdMax', { dpdMax: otherFilters.dpdMax });
 
-    qb.orderBy('c.createdAt', sortOrder.toUpperCase() as 'ASC' | 'DESC');
+    qb.orderBy('c.updatedAt', sortOrder.toUpperCase() as 'ASC' | 'DESC');
     qb.skip(skip).take(limit);
     const [data, total] = await qb.getManyAndCount();
 
