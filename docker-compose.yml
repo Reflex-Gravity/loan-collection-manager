@@ -26,7 +26,7 @@ services:
       lcm-db:
         condition: service_healthy
     env_file:
-      - ./.env
+      - apps/api/.env
     environment:
       NODE_ENV: production
     ports:
