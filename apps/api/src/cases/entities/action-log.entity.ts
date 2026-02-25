@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -10,6 +11,7 @@ import {
 import { Case } from './case.entity';
 
 @Entity('action_logs')
+@Index(['caseId', 'createdAt'])
 export class ActionLog {
   @PrimaryGeneratedColumn()
   id!: number;

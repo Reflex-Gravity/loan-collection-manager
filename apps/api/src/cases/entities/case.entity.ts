@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -15,6 +16,8 @@ import { ActionLog } from './action-log.entity';
 import { RuleDecision } from './rule-decision.entity';
 
 @Entity('cases')
+@Index(['status', 'stage', 'dpd'])
+@Index(['assignedTo'])
 export class Case {
   @PrimaryGeneratedColumn()
   id!: number;
