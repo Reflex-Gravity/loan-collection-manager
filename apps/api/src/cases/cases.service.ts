@@ -12,6 +12,7 @@ import { ListCaseDto } from './dto/list-case.dto';
 import { AddActionDto } from './dto/add-case-actions';
 import { ActionOutcome, CaseStatus } from '@lcm/shared';
 import { ActionLog } from './entities/action-log.entity';
+import { RuleDecision } from './entities/rule-decision.entity';
 
 @Injectable()
 export class CaseService {
@@ -22,6 +23,8 @@ export class CaseService {
     private readonly loanRepository: Repository<Loan>,
     @InjectRepository(ActionLog)
     private readonly actionLogRepository: Repository<ActionLog>,
+    @InjectRepository(RuleDecision)
+    private readonly ruleDecisionRepository: Repository<RuleDecision>,
   ) {}
 
   async create(dto: CreateCaseDto) {
@@ -103,15 +106,20 @@ export class CaseService {
       throw new NotFoundException(`Case not found`);
     }
 
-    const [actionLogs] = await Promise.all([
+    const [actionLogs, rule_decisions] = await Promise.all([
       this.actionLogRepository.find({
         where: { caseId: id },
         order: { createdAt: 'DESC' },
         take: 10,
       }),
+      this.ruleDecisionRepository.find({
+        where: { caseId: id },
+        order: { createdAt: 'DESC' },
+        take: 1,
+      }),
     ]);
 
-    return { ...caseRecord, actionLogs };
+    return { ...caseRecord, actionLogs, decisions: rule_decisions };
   }
 
   async addAction(caseId: number, dto: AddActionDto) {
