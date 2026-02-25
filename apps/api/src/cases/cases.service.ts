@@ -20,6 +20,8 @@ export class CaseService {
     private readonly caseRespository: Repository<Case>,
     @InjectRepository(Loan)
     private readonly loanRepository: Repository<Loan>,
+    @InjectRepository(ActionLog)
+    private readonly actionLogRepository: Repository<ActionLog>,
   ) {}
 
   async create(dto: CreateCaseDto) {
@@ -101,7 +103,15 @@ export class CaseService {
       throw new NotFoundException(`Case not found`);
     }
 
-    return caseRecord;
+    const [actionLogs] = await Promise.all([
+      this.actionLogRepository.find({
+        where: { caseId: id },
+        order: { createdAt: 'DESC' },
+        take: 10,
+      }),
+    ]);
+
+    return { ...caseRecord, actionLogs };
   }
 
   async addAction(caseId: number, dto: AddActionDto) {
