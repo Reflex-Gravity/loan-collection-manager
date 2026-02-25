@@ -26,7 +26,7 @@ export class ActionLog {
   outcome!: ActionOutcome;
 
   @Column({ type: 'text', nullable: true })
-  notes!: string;
+  notes!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

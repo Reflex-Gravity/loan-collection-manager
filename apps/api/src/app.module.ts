@@ -13,7 +13,7 @@ import { CaseModule } from './cases/cases.module';
       load: [databaseConfig],
     }),
     DbModule,
-    // CaseModule,
+    CaseModule,
   ],
   controllers: [HealthController],
 })
