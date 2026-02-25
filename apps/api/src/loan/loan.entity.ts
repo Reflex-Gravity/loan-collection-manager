@@ -10,7 +10,7 @@ import {
 import { Customer } from '../customers/customer.entity';
 import { Case } from '../cases/entities/case.entity';
 
-@Entity('loan')
+@Entity('loans')
 export class Loan {
   @PrimaryGeneratedColumn()
   id!: number;
