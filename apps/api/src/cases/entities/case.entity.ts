@@ -3,11 +3,14 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Customer } from '../customers/customer.entity';
-import { Loan } from '../loan/loan.entity';
+import { Customer } from '../../customers/customer.entity';
+import { Loan } from '../../loan/loan.entity';
 import { CaseStage, CaseStatus } from '@lcm/shared';
+import { ActionLog } from './action-log.entity';
+import { RuleDecision } from './rule-decision.entity';
 
 @Entity('case')
 export class Case {
@@ -46,4 +49,10 @@ export class Case {
   @ManyToOne(() => Loan, (loan) => loan.cases)
   @JoinColumn({ name: 'loan_id' })
   loan!: Loan;
+
+  @OneToMany(() => ActionLog, (actionLog) => actionLog.case)
+  actionLogs!: ActionLog[];
+
+  @OneToMany(() => RuleDecision, (rule) => rule.case)
+  ruleDecisions!: RuleDecision[];
 }

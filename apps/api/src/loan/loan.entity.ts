@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Customer } from '../customers/customer.entity';
-import { Case } from '../case/case.entity';
+import { Case } from '../cases/entities/case.entity';
 
 @Entity('loan')
 export class Loan {
@@ -27,7 +27,7 @@ export class Loan {
   @Column({ name: 'due_date', type: 'timestamptz' })
   dueDate!: Date;
 
-  @Column('enum', { enum: LoanStatus, default: LoanStatus.ACTIVE })
+  @Column({ type: 'enum', enum: LoanStatus, default: LoanStatus.ACTIVE })
   status!: LoanStatus;
 
   // relations

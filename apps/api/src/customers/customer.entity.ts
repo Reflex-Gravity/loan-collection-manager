@@ -1,6 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Loan } from '../loan/loan.entity';
-import { Case } from '../case/case.entity';
+import { Case } from '../cases/entities/case.entity';
 
 @Entity('customers')
 export class Customer {
