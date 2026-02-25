@@ -112,7 +112,9 @@ export default function CasesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-600">{kpis.avgDpd}</div>
+            <div className="text-3xl font-bold text-red-600">
+              {kpis.averageDpd}
+            </div>
           </CardContent>
         </Card>
       </div>
