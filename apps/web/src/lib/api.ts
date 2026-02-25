@@ -72,7 +72,7 @@ export interface CaseRow {
   stage: string;
   status: string;
   assignedTo: string | null;
-  assignGroup: string | null;
+  assignedGroup: string | null;
   createdAt: string;
   customer: {
     id: number;

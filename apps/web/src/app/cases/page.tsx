@@ -222,6 +222,7 @@ export default function CasesPage() {
                     <th className="pb-2 font-medium">Stage</th>
                     <th className="pb-2 font-medium">Status</th>
                     <th className="pb-2 font-medium">Assigned To</th>
+                    <th className="pb-2 font-medium">Assigned Group</th>
                     <th className="pb-2 font-medium">Outstanding</th>
                     <th className="pb-2 font-medium"></th>
                   </tr>
@@ -251,9 +252,8 @@ export default function CasesPage() {
                           {c.status.replace("_", " ")}
                         </Badge>
                       </td>
-                      <td className="py-2 text-sm">
-                        {c.assignedTo ?? c.assignGroup ?? "—"}
-                      </td>
+                      <td className="py-2 text-sm">{c.assignedTo ?? "—"}</td>
+                      <td className="py-2 text-sm">{c.assignedGroup ?? "—"}</td>
                       <td className="py-2 font-mono text-sm">
                         $
                         {Number(c.loan.outstanding).toLocaleString("en-US", {
