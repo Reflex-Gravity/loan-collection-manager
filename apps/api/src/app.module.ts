@@ -5,6 +5,7 @@ import { HealthController } from './health.controller';
 import { ConfigModule } from '@nestjs/config';
 import databaseConfig from './config/database.config';
 import { CaseModule } from './cases/cases.module';
+import { CustomerModule } from './customers/customer.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { CaseModule } from './cases/cases.module';
     }),
     DbModule,
     CaseModule,
+    CustomerModule,
   ],
   controllers: [HealthController],
 })

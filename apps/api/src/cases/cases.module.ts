@@ -5,9 +5,13 @@ import { ActionLog } from './entities/action-log.entity';
 import { RuleDecision } from './entities/rule-decision.entity';
 import { CasesController } from './cases.controller';
 import { CaseService } from './cases.service';
+import { Customer } from '../customers/customer.entity';
+import { Loan } from '../loan/loan.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Case, ActionLog, RuleDecision])],
+  imports: [
+    TypeOrmModule.forFeature([Case, Customer, Loan, ActionLog, RuleDecision]),
+  ],
   controllers: [CasesController],
   providers: [CaseService],
   exports: [CaseService],

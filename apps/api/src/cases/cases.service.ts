@@ -84,7 +84,7 @@ export class CaseService {
     if (otherFilters.dpdMax !== undefined)
       qb.andWhere('c.dpd <= :dpdMax', { dpdMax: otherFilters.dpdMax });
 
-    qb.orderBy('createdAt', sortOrder.toUpperCase() as 'ASC' | 'DESC');
+    qb.orderBy('c.createdAt', sortOrder.toUpperCase() as 'ASC' | 'DESC');
     qb.skip(skip).take(limit);
     const [data, total] = await qb.getManyAndCount();
 
