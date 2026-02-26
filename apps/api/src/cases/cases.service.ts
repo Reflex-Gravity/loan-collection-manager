@@ -4,9 +4,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateCaseDto } from './dto/create-case.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Case } from './entities/case.entity';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Between, DataSource, Repository } from 'typeorm';
+import { Case } from './entities/case.entity';
 import { Loan } from '../loan/loan.entity';
 import { ListCaseDto } from './dto/list-case.dto';
 import { AddActionDto } from './dto/add-case-actions';
@@ -28,7 +28,7 @@ export class CaseService {
     @InjectRepository(RuleDecision)
     private readonly ruleDecisionRepository: Repository<RuleDecision>,
     private rulesService: RulesService<Case, CaseAssignmentAction>,
-    private dataSource: DataSource,
+    @InjectDataSource() private dataSource: DataSource,
   ) {}
 
   async create(dto: CreateCaseDto) {

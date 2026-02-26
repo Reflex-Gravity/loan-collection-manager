@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import * as rulesConfig from '../config/rules.json';
+import rulesConfig from '../config/rules.json';
 import { Rule, RuleCondition, RuleResult } from '@lcm/shared';
 
 @Injectable()
@@ -8,8 +8,7 @@ export class RulesService<T, R> implements OnModuleInit {
 
   onModuleInit() {
     // 1. Load and Type-Cast Rules on Startup
-    // This explicit cast fixes "unsafe member access" by telling TS this is a Rule[]
-    this.rules = (rulesConfig as unknown as Rule<R>[]).sort(
+    this.rules = (rulesConfig as Rule<R>[]).sort(
       (a, b) => a.priority - b.priority,
     );
   }
