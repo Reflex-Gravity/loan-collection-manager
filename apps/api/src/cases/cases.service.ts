@@ -259,7 +259,7 @@ export class CaseService {
       assignedTo: decision.action.assignedTo,
       decision: {
         matchedRules: matchedRules.map((rule) => rule.matchedRuleId),
-        reason: matchedRules.map((rule) => rule.reason).join('; '),
+        reason: decision.reason,
       },
     };
   }
