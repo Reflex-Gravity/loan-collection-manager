@@ -35,7 +35,7 @@ export default function CasesPage() {
   const [kpis, setKpis] = useState({
     openCases: 0,
     resolvedToday: 0,
-    avgDpd: 0,
+    averageDpd: 0,
   });
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CaseFilters>({ page: 1, limit: 10 });

@@ -29,6 +29,8 @@ services:
       - apps/api/.env
     environment:
       NODE_ENV: production
+      DB_HOST: lcm-db
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
     ports:
       - "3001:3001"
     healthcheck:

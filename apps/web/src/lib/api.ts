@@ -54,7 +54,7 @@ export const api = {
       }),
     assign: (id: number) => request(`/cases/${id}/assign`, { method: "POST" }),
     kpis: () =>
-      request<{ openCases: number; resolvedToday: number; avgDpd: number }>(
+      request<{ openCases: number; resolvedToday: number; averageDpd: number }>(
         "/cases/kpis",
       ),
   },

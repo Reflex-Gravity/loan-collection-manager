@@ -115,7 +115,7 @@ export default function CaseDetailPage() {
             <div><span className="text-muted-foreground">Outstanding:</span> <strong className="text-red-600">${Number(loan.outstanding).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></div>
             <div><span className="text-muted-foreground">Due Date:</span> {new Date(loan.dueDate).toLocaleDateString()}</div>
             <div><span className="text-muted-foreground">DPD:</span> <strong className="text-red-600">{caseData.dpd} days</strong></div>
-            <div><span className="text-muted-foreground">Assigned To:</span> {caseData.assignedTo ?? caseData.assignGroup ?? 'Unassigned'}</div>
+            <div><span className="text-muted-foreground">Assigned To:</span> {caseData.assignedTo ?? caseData.assignedGroup ?? 'Unassigned'}</div>
           </CardContent>
         </Card>
       </div>
