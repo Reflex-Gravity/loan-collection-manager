@@ -54,14 +54,14 @@ async function seed() {
       phone: '+1-555-0104',
       email: 'david@example.com',
       country: 'US',
-      riskScore: 92,
+      riskScore: 75,
     },
     {
       name: 'Emma Brown',
       phone: '+1-555-0105',
       email: 'emma@example.com',
       country: 'UK',
-      riskScore: 45,
+      riskScore: 85,
     },
   ]);
 
