@@ -12,6 +12,8 @@ import { Loan } from '../loan/loan.entity';
 import { AppDataSource } from './data-source';
 
 async function seed() {
+  const force = process.argv.includes('--force');
+
   console.log('Starting Seed...');
   await AppDataSource.initialize();
   console.log('Database connected.');
@@ -20,6 +22,13 @@ async function seed() {
   const loanRepo = AppDataSource.getRepository(Loan);
   const caseRepo = AppDataSource.getRepository(Case);
   const actionRepo = AppDataSource.getRepository(ActionLog);
+
+  const existingCount = await customerRepo.count();
+  if (existingCount > 0 && !force) {
+    console.log(`Seed skipped: ${existingCount} customers already exist. Run with --force to override.`);
+    await AppDataSource.destroy();
+    return;
+  }
 
   console.log('Truncating tables...');
   await AppDataSource.query(

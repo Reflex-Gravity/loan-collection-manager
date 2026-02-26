@@ -77,7 +77,8 @@ DB_SYNC=false
 | `yarn migration:run` | Apply all pending migrations |
 | `yarn migration:revert` | Revert the last migration |
 | `yarn migration:generate` | Generate a new migration from entity diff |
-| `yarn seed` | Truncate all tables and re-seed demo data |
+| `yarn seed` | Seed demo data if no data exists |
+| `yarn seed:force` | Truncate all tables and re-seed unconditionally |
 | `yarn start:dev` | Start API in watch mode |
 | `yarn test` | Run unit tests |
 
