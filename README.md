@@ -5,11 +5,10 @@ A full-stack collections case management system built with NestJS, Next.js, Post
 ## Quick Start (Docker)
 
 ```bash
-# Copy and configure environment variables first
-cp apps/api/.env.example apps/api/.env   # edit as needed
-
-docker compose up --build
+yarn docker:up
 ```
+
+> Copies `.env.example` → `.env` (skipped if `.env` already exists) then runs `docker compose up --build`.
 
 - **Frontend:** http://localhost:3000
 - **API:** http://localhost:3001/api

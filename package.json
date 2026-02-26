@@ -11,7 +11,7 @@
     "dev:api": "yarn workspace @lcm/api start:dev",
     "dev:web": "yarn workspace @lcm/web dev",
     "build": "yarn workspaces run build",
-    "docker:up": "docker compose up --build",
+    "docker:up": "cp -n apps/api/.env.example apps/api/.env; docker compose up --build",
     "docker:down": "docker compose down"
   },
   "devDependencies": {
