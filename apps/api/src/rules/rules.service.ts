@@ -9,21 +9,39 @@ export class RulesService<T, R> implements OnModuleInit {
   onModuleInit() {
     // 1. Load and Type-Cast Rules on Startup
     this.rules = (rulesConfig as Rule<R>[]).sort(
-      (a, b) => a.priority - b.priority,
+      (a, b) => b.priority - a.priority,
     );
   }
 
-  public evaluate(entity: T): RuleResult<R> | null {
+  public evaluate(entity: T): {
+    matchedRules: RuleResult<R>[] | null;
+    decision: RuleResult<R> | null;
+  } {
+    const matchedRules = [];
     for (const rule of this.rules) {
       if (this.checkCondition(rule.condition, entity)) {
-        return {
+        const value = this.getValue(entity, rule.condition.field);
+        matchedRules.push({
           matchedRuleId: rule.id,
           action: rule.action,
-          reason: rule.description,
-        };
+          priority: rule.priority,
+          reason:
+            value !== null
+              ? rule.reason.replaceAll('%%field%%', String(value))
+              : rule.reason,
+        });
       }
     }
-    return null;
+    if (matchedRules.length === 0) {
+      return { matchedRules: null, decision: null };
+    }
+
+    // pick higher priority rule
+    const decision = [...matchedRules].sort(
+      (a, b) => a.priority - b.priority,
+    )[0];
+    decision.reason = matchedRules.map((rule) => rule.reason).join('; ');
+    return { matchedRules, decision };
   }
 
   private checkCondition(condition: RuleCondition, entity: T): boolean {
@@ -62,20 +80,21 @@ export class RulesService<T, R> implements OnModuleInit {
   }
 
   // resolves and returns the value based on the json path
-  private getValue(obj: unknown, path: string): unknown {
+  private getValue(obj: unknown, path: string): string | number | null {
     const keys = path.split('.');
     let current: unknown = obj;
 
     for (const key of keys) {
-      // Check if current is a valid object before accessing
       if (typeof current === 'object' && current !== null && key in current) {
-        // Safely cast to Record to access the key
         current = (current as Record<string, unknown>)[key];
       } else {
         return null;
       }
     }
 
-    return current;
+    if (typeof current === 'string' || typeof current === 'number') {
+      return current;
+    }
+    return null;
   }
 }

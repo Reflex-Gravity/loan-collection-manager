@@ -220,10 +220,10 @@ export class CaseService {
     if (!caseEntity) throw new NotFoundException(`Case ${caseId} not found`);
 
     // evaluate the case
-    const decision = this.rulesService.evaluate(caseEntity);
+    const { matchedRules, decision } = this.rulesService.evaluate(caseEntity);
 
-    if (!decision) {
-      // No rule matched: return current state or log warning
+    // No rule matched: return current state
+    if (!matchedRules || !decision) {
       return caseEntity;
     }
 
@@ -238,8 +238,8 @@ export class CaseService {
         // 5. Create Audit Log (RuleDecision) within the SAME transaction
         const auditLog = new RuleDecision();
         auditLog.case = savedCase;
-        auditLog.matchedRules = [decision.matchedRuleId]; // JSON array of rules
-        auditLog.reason = decision.reason; // Text explanation (e.g., "dpd=12 -> Tier2")
+        auditLog.matchedRules = matchedRules.map((rule) => rule.matchedRuleId); // JSON array of rules
+        auditLog.reason = decision.reason;
 
         await manager.save(RuleDecision, auditLog);
 
@@ -256,11 +256,10 @@ export class CaseService {
     return {
       caseId,
       stage: decision.action.stage,
-      assignGroup: decision.action.assignedTo,
       assignedTo: decision.action.assignedTo,
       decision: {
-        matchedRules: decision.matchedRuleId,
-        reason: decision.reason,
+        matchedRules: matchedRules.map((rule) => rule.matchedRuleId),
+        reason: matchedRules.map((rule) => rule.reason).join('; '),
       },
     };
   }

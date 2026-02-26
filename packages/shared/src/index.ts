@@ -55,6 +55,7 @@ export interface Rule<R> {
   condition: RuleCondition;
   action: R;
   description: string;
+  reason: string;
 }
 
 export interface RuleResult<R> {

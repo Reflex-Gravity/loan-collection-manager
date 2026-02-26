@@ -8,6 +8,7 @@
       "value": 80
     },
     "action": { "stage": "HARD", "assignedTo": "SeniorAgent" },
+    "reason": "riskScore=%%field%% -> SeniorAgent override",
     "description": "riskScore > 80 -> SeniorAgent override"
   },
   {
@@ -15,6 +16,7 @@
     "priority": 2,
     "condition": { "field": "dpd", "operator": "gt", "value": 30 },
     "action": { "stage": "LEGAL", "assignedTo": "Legal" },
+    "reason": "dpd=%%field%% -> Legal",
     "description": "dpd > 30 -> Legal"
   },
   {
@@ -22,6 +24,7 @@
     "priority": 3,
     "condition": { "field": "dpd", "operator": "between", "value": [8, 30] },
     "action": { "stage": "HARD", "assignedTo": "Tier2" },
+    "reason": "dpd=%%field%% -> Tier2",
     "description": "dpd between 8 and 30 -> Tier2"
   },
   {
@@ -29,6 +32,7 @@
     "priority": 4,
     "condition": { "field": "dpd", "operator": "between", "value": [1, 7] },
     "action": { "stage": "SOFT", "assignedTo": "Tier1" },
+    "reason": "dpd=%%field%% -> Tier1",
     "description": "dpd between 1 and 7 -> Tier1"
   }
 ]

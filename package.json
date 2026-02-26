@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently \"yarn workspace @lcm/api start:dev\" \"yarn workspace @lcm/web dev\"",
+    "dev": "concurrently \"yarn workspace @lcm/shared build\" \"yarn dev:api\" \"yarn dev:web\"",
     "dev:api": "yarn workspace @lcm/api start:dev",
     "dev:web": "yarn workspace @lcm/web dev",
     "build": "yarn workspaces run build",
