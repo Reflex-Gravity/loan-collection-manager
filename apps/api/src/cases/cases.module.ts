@@ -8,12 +8,13 @@ import { CaseService } from './cases.service';
 import { Customer } from '../customers/customer.entity';
 import { Loan } from '../loan/loan.entity';
 import { RulesModule } from '../rules/rules.module';
-import { DataSource } from 'typeorm';
+import { PdfGeneratorModule } from '../pdf-generator/pdf-generator.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Case, Customer, Loan, ActionLog, RuleDecision]),
     RulesModule,
+    PdfGeneratorModule,
   ],
   controllers: [CasesController],
   providers: [CaseService],
