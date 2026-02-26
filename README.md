@@ -21,6 +21,7 @@ Docker Compose starts three services in dependency order: `lcm-db` (Postgres) �
 ## Local Development Setup
 
 ### Prerequisites
+
 - Node.js 20+, Yarn 1.x
 - Docker (for Postgres only)
 
@@ -72,15 +73,15 @@ DB_SYNC=false
 
 ### Useful Scripts (inside `apps/api`)
 
-| Script | Description |
-|--------|-------------|
-| `yarn migration:run` | Apply all pending migrations |
-| `yarn migration:revert` | Revert the last migration |
-| `yarn migration:generate` | Generate a new migration from entity diff |
-| `yarn seed` | Seed demo data if no data exists |
-| `yarn seed:force` | Truncate all tables and re-seed unconditionally |
-| `yarn start:dev` | Start API in watch mode |
-| `yarn test` | Run unit tests |
+| Script                    | Description                                     |
+| ------------------------- | ----------------------------------------------- |
+| `yarn migration:run`      | Apply all pending migrations                    |
+| `yarn migration:revert`   | Revert the last migration                       |
+| `yarn migration:generate` | Generate a new migration from entity diff       |
+| `yarn seed`               | Seed demo data if no data exists                |
+| `yarn seed:force`         | Truncate all tables and re-seed unconditionally |
+| `yarn start:dev`          | Start API in watch mode                         |
+| `yarn test`               | Run unit tests                                  |
 
 ---
 
@@ -99,14 +100,14 @@ The `@lcm/shared` package is a local workspace dependency used by both the API a
 
 ### Backend Modules
 
-| Module | Responsibility |
-|--------|---------------|
-| `CaseModule` | CRUD operations, filtering with query builder, pagination, KPI aggregations |
-| `CustomerModule` | Customer listing |
-| `RulesModule` | Data-driven rule evaluation (see below) |
-| `PdfGeneratorModule` | Server-side HTML→PDF via Puppeteer |
-| `DbModule` | Global TypeORM configuration, entity registration |
-| `HealthController` | `GET /api/health` — used by Docker health check |
+| Module               | Responsibility                                                              |
+| -------------------- | --------------------------------------------------------------------------- |
+| `CaseModule`         | CRUD operations, filtering with query builder, pagination, KPI aggregations |
+| `CustomerModule`     | Customer listing                                                            |
+| `RulesModule`        | Data-driven rule evaluation (see below)                                     |
+| `PdfGeneratorModule` | Server-side HTML→PDF via Puppeteer                                          |
+| `DbModule`           | Global TypeORM configuration, entity registration                           |
+| `HealthController`   | `GET /api/health` — used by Docker health check                             |
 
 ### Data Model
 
@@ -127,6 +128,10 @@ Customer (1) ──< Loan (1) ──< Case
 
 `Case` has a `@VersionColumn()` managed by TypeORM. Every `save()` automatically increments `version` and includes a `WHERE version = $prev` clause. If two concurrent requests read the same version and both try to save, the second one throws `OptimisticLockVersionMismatchError`, which the service catches and re-throws as `409 Conflict`. The client must re-fetch and retry.
 
+### Daily Job to recalculate DPD and auto-escalate stage and assign
+
+Used a `cron` job to schedule this service using NestJS inbuilt library.
+
 ### PDF Generation
 
 `GET /api/cases/:id/notice.pdf` builds an HTML string server-side from case + loan + customer data, then hands it to a headless Chromium instance (Puppeteer) which renders it to A4 PDF. The browser is launched fresh per request and always closed in a `finally` block. In Docker, `PUPPETEER_EXECUTABLE_PATH` is set to the system Chromium binary to avoid bundling a second Chromium inside the container.
@@ -146,6 +151,7 @@ No code changes are required to add, edit, or reorder rules — only the JSON fi
 At module initialization `RulesService.onModuleInit()` loads the JSON, casts it to `Rule<R>[]`, and sorts by `priority` ascending (lower number = evaluated first, wins on first match).
 
 When `POST /api/cases/:id/assign` is called:
+
 1. `CasesService` fetches the case (with customer relation)
 2. `RulesService.evaluate(caseEntity)` iterates rules in priority order, returning the **first match**
 3. The matched rule's `action` is applied to the case in a transaction
@@ -175,16 +181,16 @@ When `POST /api/cases/:id/assign` is called:
 
 **`condition.operator`** — one of:
 
-| Operator | Meaning | `value` type |
-|----------|---------|--------------|
-| `gt` | greater than | number |
-| `gte` | greater than or equal | number |
-| `lt` | less than | number |
-| `lte` | less than or equal | number |
-| `eq` | equal | any |
-| `neq` | not equal | any |
-| `between` | inclusive range | `[min, max]` |
-| `in` | value in set | array |
+| Operator  | Meaning               | `value` type |
+| --------- | --------------------- | ------------ |
+| `gt`      | greater than          | number       |
+| `gte`     | greater than or equal | number       |
+| `lt`      | less than             | number       |
+| `lte`     | less than or equal    | number       |
+| `eq`      | equal                 | any          |
+| `neq`     | not equal             | any          |
+| `between` | inclusive range       | `[min, max]` |
+| `in`      | value in set          | array        |
 
 **`action`** — sets `stage` (`SOFT`/`HARD`/`LEGAL`) and `assignedTo` (agent/group name) on the case
 
@@ -192,12 +198,12 @@ When `POST /api/cases/:id/assign` is called:
 
 ### Current Rules (in priority order)
 
-| Priority | Rule ID | Condition | Result |
-|----------|---------|-----------|--------|
-| 1 | `RISK_GT_80_OVERRIDE` | `customer.riskScore > 80` | HARD stage → SeniorAgent |
-| 2 | `DPD_GT_30` | `dpd > 30` | LEGAL stage → Legal |
-| 3 | `DPD_8_30` | `8 ≤ dpd ≤ 30` | HARD stage → Tier2 |
-| 4 | `DPD_1_7` | `1 ≤ dpd ≤ 7` | SOFT stage → Tier1 |
+| Priority | Rule ID               | Condition                 | Result                   |
+| -------- | --------------------- | ------------------------- | ------------------------ |
+| 1        | `RISK_GT_80_OVERRIDE` | `customer.riskScore > 80` | HARD stage → SeniorAgent |
+| 2        | `DPD_GT_30`           | `dpd > 30`                | LEGAL stage → Legal      |
+| 3        | `DPD_8_30`            | `8 ≤ dpd ≤ 30`            | HARD stage → Tier2       |
+| 4        | `DPD_1_7`             | `1 ≤ dpd ≤ 7`             | SOFT stage → Tier1       |
 
 ### Adding or Editing Rules
 
@@ -226,19 +232,19 @@ Example — add a rule that escalates high-risk customers even at low DPD:
 
 ## API Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/cases` | Create a case (requires `customerId`, `loanId`) |
-| `GET` | `/api/cases` | List cases — supports `status`, `stage`, `assignedTo`, `dpdMin`, `dpdMax`, `page`, `limit`, `sortOrder` |
-| `GET` | `/api/cases/kpis` | Open case count, resolved today, average DPD |
-| `GET` | `/api/cases/:id` | Case detail with last 10 action logs and latest rule decision |
-| `POST` | `/api/cases/:id/actions` | Log a contact action; sets status to IN_PROGRESS; PAID outcome resolves the case |
-| `POST` | `/api/cases/:id/assign` | Run rule engine, update stage/assignee, save audit record |
-| `GET` | `/api/cases/:id/notice.pdf` | Download A4 PDF payment notice |
-| `GET` | `/api/customers` | List all customers |
-| `GET` | `/api/loans` | List all loans |
-| `GET` | `/api/metrics` | Case counts by status/stage, avg DPD, daily activity |
-| `GET` | `/api/health` | Health check (used by Docker) |
+| Method | Path                        | Description                                                                                             |
+| ------ | --------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `POST` | `/api/cases`                | Create a case (requires `customerId`, `loanId`)                                                         |
+| `GET`  | `/api/cases`                | List cases — supports `status`, `stage`, `assignedTo`, `dpdMin`, `dpdMax`, `page`, `limit`, `sortOrder` |
+| `GET`  | `/api/cases/kpis`           | Open case count, resolved today, average DPD                                                            |
+| `GET`  | `/api/cases/:id`            | Case detail with last 10 action logs and latest rule decision                                           |
+| `POST` | `/api/cases/:id/actions`    | Log a contact action; sets status to IN_PROGRESS; PAID outcome resolves the case                        |
+| `POST` | `/api/cases/:id/assign`     | Run rule engine, update stage/assignee, save audit record                                               |
+| `GET`  | `/api/cases/:id/notice.pdf` | Download A4 PDF payment notice                                                                          |
+| `GET`  | `/api/customers`            | List all customers                                                                                      |
+| `GET`  | `/api/loans`                | List all loans                                                                                          |
+| `GET`  | `/api/metrics`              | Case counts by status/stage, avg DPD, daily activity                                                    |
+| `GET`  | `/api/health`               | Health check (used by Docker)                                                                           |
 
 Full interactive docs available at `/api/docs` (Swagger UI).
 
@@ -247,19 +253,25 @@ Full interactive docs available at `/api/docs` (Swagger UI).
 ## Trade-offs & Design Decisions
 
 ### Rules in JSON file vs. database table
+
 Storing rules in a static JSON file keeps the rule engine simple and version-controlled alongside code. The trade-off is that adding a rule requires a file edit and server restart — there is no live admin UI. Moving rules to a database table with a CRUD API would enable runtime updates but adds a management interface, schema complexity, and the need to invalidate the in-memory rule cache.
 
 ### TypeORM vs. Prisma
+
 TypeORM was chosen for its native NestJS integration (`@nestjs/typeorm`) and built-in optimistic locking via `@VersionColumn`. The downside is a more verbose query builder compared to Prisma's typed client, and manual entity class definitions that can drift from the DB schema.
 
 ### Optimistic locking vs. pessimistic locking
+
 Optimistic locking (version field) was chosen because concurrent assignment conflicts are expected to be rare. It avoids holding DB-level row locks during the evaluation round-trip. The cost is a 409 error that callers must handle with a re-fetch and retry.
 
 ### Puppeteer in the same container
+
 Running Puppeteer alongside the API avoids a separate service and simplifies deployment. The cost is a significantly larger Docker image (~300 MB for Chromium). A production system would likely extract PDF generation into a dedicated microservice or use a lighter renderer (WeasyPrint, wkhtmltopdf, or a SaaS PDF API).
 
 ### No authentication
+
 JWT/session auth is not implemented — this is an interview assignment scoped to core case management logic. In production, `@nestjs/passport` with a JWT strategy and `@UseGuards(AuthGuard('jwt'))` on each controller would be added.
 
 ### Seed data design
+
 The seed truncates all tables with `RESTART IDENTITY CASCADE` and re-seeds deterministically. This makes local development repeatable but means running `yarn seed` is destructive. A production seed would be additive and idempotent.
