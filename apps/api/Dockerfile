@@ -19,12 +19,12 @@ FROM base AS builder
 WORKDIR /app
 
 # Copy workspace manifests and root tsconfig first for layer caching
-COPY package.json tsconfig.base.json ./
+COPY package.json yarn.lock tsconfig.base.json ./
 COPY packages/shared/package.json ./packages/shared/package.json
 COPY apps/api/package.json ./apps/api/package.json
 
 # Install all workspace dependencies
-RUN yarn install
+RUN yarn install --frozen-lockfile
 
 # Copy source files
 COPY packages/shared/ ./packages/shared/
@@ -43,10 +43,10 @@ FROM base AS runner
 WORKDIR /app
 
 # Copy workspace manifests and install only production deps
-COPY package.json ./
+COPY package.json yarn.lock ./
 COPY packages/shared/package.json ./packages/shared/package.json
 COPY apps/api/package.json ./apps/api/package.json
-RUN yarn install --production
+RUN yarn install --frozen-lockfile --production
 
 # Copy compiled output from builder
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
