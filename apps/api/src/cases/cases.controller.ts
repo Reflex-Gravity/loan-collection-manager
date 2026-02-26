@@ -53,4 +53,12 @@ export class CasesController {
   addAction(@Param('id', ParseIntPipe) id: number, @Body() dto: AddActionDto) {
     return this.caseService.addAction(id, dto);
   }
+
+  @Post(':id/assign')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Run rules-based assignment (idempotent)' })
+  @ApiParam({ name: 'id', type: Number })
+  assign(@Param('id', ParseIntPipe) id: number) {
+    return this.caseService.assign(id);
+  }
 }

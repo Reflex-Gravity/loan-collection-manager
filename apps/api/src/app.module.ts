@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import databaseConfig from './config/database.config';
 import { CaseModule } from './cases/cases.module';
 import { CustomerModule } from './customers/customer.module';
+import { RulesModule } from './rules/rules.module';
 
 @Module({
   imports: [

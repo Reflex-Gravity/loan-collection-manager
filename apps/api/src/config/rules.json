@@ -1,0 +1,34 @@
+[
+  {
+    "id": "RISK_GT_80_OVERRIDE",
+    "priority": 1,
+    "condition": {
+      "field": "customer.riskScore",
+      "operator": "gt",
+      "value": 80
+    },
+    "action": { "stage": "HARD", "assignedTo": "SeniorAgent" },
+    "description": "riskScore > 80 -> SeniorAgent override"
+  },
+  {
+    "id": "DPD_GT_30",
+    "priority": 2,
+    "condition": { "field": "dpd", "operator": "gt", "value": 30 },
+    "action": { "stage": "LEGAL", "assignedTo": "Legal" },
+    "description": "dpd > 30 -> Legal"
+  },
+  {
+    "id": "DPD_8_30",
+    "priority": 3,
+    "condition": { "field": "dpd", "operator": "between", "value": [8, 30] },
+    "action": { "stage": "HARD", "assignedTo": "Tier2" },
+    "description": "dpd between 8 and 30 -> Tier2"
+  },
+  {
+    "id": "DPD_1_7",
+    "priority": 4,
+    "condition": { "field": "dpd", "operator": "between", "value": [1, 7] },
+    "action": { "stage": "SOFT", "assignedTo": "Tier1" },
+    "description": "dpd between 1 and 7 -> Tier1"
+  }
+]

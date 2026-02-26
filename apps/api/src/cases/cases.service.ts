@@ -6,14 +6,15 @@ import {
 import { CreateCaseDto } from './dto/create-case.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Case } from './entities/case.entity';
-import { Between, Repository } from 'typeorm';
+import { Between, DataSource, Repository } from 'typeorm';
 import { Loan } from '../loan/loan.entity';
 import { ListCaseDto } from './dto/list-case.dto';
 import { AddActionDto } from './dto/add-case-actions';
-import { ActionOutcome, CaseStatus } from '@lcm/shared';
+import { ActionOutcome, CaseAssignmentAction, CaseStatus } from '@lcm/shared';
 import { ActionLog } from './entities/action-log.entity';
 import { RuleDecision } from './entities/rule-decision.entity';
 import { differenceInDays } from '../common/utils/utils';
+import { RulesService } from '../rules/rules.service';
 
 @Injectable()
 export class CaseService {
@@ -26,6 +27,8 @@ export class CaseService {
     private readonly actionLogRepository: Repository<ActionLog>,
     @InjectRepository(RuleDecision)
     private readonly ruleDecisionRepository: Repository<RuleDecision>,
+    private rulesService: RulesService<Case, CaseAssignmentAction>,
+    private dataSource: DataSource,
   ) {}
 
   async create(dto: CreateCaseDto) {
@@ -200,5 +203,40 @@ export class CaseService {
       resolvedToday,
       averageDpd: Math.round(Number(averageDpd?.avg ?? 0)),
     };
+  }
+
+  async assign(caseId: number) {
+    const caseEntity = await this.caseRespository.findOne({
+      where: { id: caseId },
+      relations: ['customer'],
+    });
+
+    if (!caseEntity) throw new NotFoundException(`Case ${caseId} not found`);
+
+    // evaluate the case
+    const decision = this.rulesService.evaluate(caseEntity);
+
+    if (!decision) {
+      // No rule matched: return current state or log warning
+      return caseEntity;
+    }
+
+    // start transaction for transactional safety
+    await this.dataSource.transaction(async (manager) => {
+      // 4. Update Case Entity
+      caseEntity.stage = decision.action.stage;
+      caseEntity.assignedTo = decision.action.assignedTo;
+      const savedCase = await manager.save(Case, caseEntity);
+
+      // 5. Create Audit Log (RuleDecision) within the SAME transaction
+      const auditLog = new RuleDecision();
+      auditLog.case = savedCase;
+      auditLog.matchedRules = [decision.matchedRuleId]; // JSON array of rules
+      auditLog.reason = decision.reason; // Text explanation (e.g., "dpd=12 -> Tier2")
+
+      await manager.save(RuleDecision, auditLog);
+
+      return savedCase;
+    });
   }
 }
