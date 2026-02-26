@@ -1,0 +1,495 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Loan Collection Manager",
+    "description": "Full API collection for the Loan Collection Manager system.\n\nSet the `baseUrl` variable to switch between environments:\n- Local dev: `http://localhost:3001/api`\n- Docker:    `http://localhost:3001/api`\n\nSeed data IDs:\n- Customers: 1–5\n- Loans: 1–6\n- Cases: 1–6",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001/api",
+      "type": "string"
+    },
+    {
+      "key": "caseId",
+      "value": "1",
+      "type": "string",
+      "description": "Default case ID used across case-specific requests"
+    }
+  ],
+  "item": [
+    {
+      "name": "Cases",
+      "item": [
+        {
+          "name": "Create Case",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cases",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"loanId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Creates a new delinquency case. DPD is calculated automatically from the loan's due date.\n\nValidation rules:\n- `customerId` and `loanId` must exist\n- The loan must belong to the customer\n- Returns 404 if either entity is not found\n- Returns 400 if the loan/customer mismatch"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('caseId', body.id);",
+                  "  pm.test('Case created and caseId saved', () => {",
+                  "    pm.expect(body.id).to.be.a('number');",
+                  "  });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Cases — all",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cases",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases"]
+            },
+            "description": "Returns paginated cases with customer and loan relations. Defaults: page=1, limit=20, sortOrder=desc."
+          }
+        },
+        {
+          "name": "List Cases — filter by status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cases?status=OPEN",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases"],
+              "query": [
+                { "key": "status", "value": "OPEN", "description": "OPEN | IN_PROGRESS | RESOLVED | CLOSED" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Cases — filter by stage",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cases?stage=LEGAL",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases"],
+              "query": [
+                { "key": "stage", "value": "LEGAL", "description": "SOFT | HARD | LEGAL" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Cases — filter by DPD range",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cases?dpdMin=8&dpdMax=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases"],
+              "query": [
+                { "key": "dpdMin", "value": "8" },
+                { "key": "dpdMax", "value": "30" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Cases — filter by assignedTo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cases?assignedTo=SeniorAgent",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases"],
+              "query": [
+                { "key": "assignedTo", "value": "SeniorAgent" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Cases — paginated",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cases?page=1&limit=3&sortOrder=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "3" },
+                { "key": "sortOrder", "value": "asc", "description": "asc | desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get KPIs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cases/kpis",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "kpis"]
+            },
+            "description": "Returns: openCases (count), resolvedToday (count), averageDpd (rounded integer)."
+          }
+        },
+        {
+          "name": "Get Case Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cases/{{caseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "{{caseId}}"]
+            },
+            "description": "Returns case with customer, loan, last 10 action logs, and latest rule decision."
+          }
+        },
+        {
+          "name": "Add Action — call, no answer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cases/{{caseId}}/actions",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "{{caseId}}", "actions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"CALL\",\n  \"outcome\": \"NO_ANSWER\",\n  \"notes\": \"Called at 10am, no answer\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Logs a contact attempt. Sets case status to IN_PROGRESS if it was OPEN.\n\ntype: CALL | SMS | EMAIL | WHATSAPP\noutcome: NO_ANSWER | PROMISE_TO_PAY | PAID | WRONG_NUMBER\nnotes: optional, max 1000 chars"
+          }
+        },
+        {
+          "name": "Add Action — SMS, promise to pay",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cases/{{caseId}}/actions",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "{{caseId}}", "actions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"SMS\",\n  \"outcome\": \"PROMISE_TO_PAY\",\n  \"notes\": \"Customer replied, promised to pay by Friday\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Add Action — paid (resolves case)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cases/{{caseId}}/actions",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "{{caseId}}", "actions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"CALL\",\n  \"outcome\": \"PAID\",\n  \"notes\": \"Customer paid full outstanding amount\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "outcome=PAID transitions case status to RESOLVED."
+          }
+        },
+        {
+          "name": "Run Assignment (rule engine)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/cases/{{caseId}}/assign",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "{{caseId}}", "assign"]
+            },
+            "description": "Evaluates all rules against the case's current DPD and customer.riskScore. Updates stage and assignedTo, and saves a RuleDecision audit record. Idempotent — safe to call multiple times. Returns 409 if a concurrent modification is detected."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Assignment returned 200', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 409]);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('Has decision', () => {",
+                  "    pm.expect(body.decision).to.exist;",
+                  "    pm.expect(body.decision.matchedRules).to.exist;",
+                  "  });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download PDF Notice",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cases/{{caseId}}/notice.pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "{{caseId}}", "notice.pdf"]
+            },
+            "description": "Generates and streams an A4 PDF payment reminder notice for the case. Response: application/pdf with Content-Disposition: attachment."
+          }
+        },
+        {
+          "name": "Get Case — 404 example",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cases/9999",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "9999"]
+            },
+            "description": "Expected: 404 Not Found — demonstrates the global exception filter response shape."
+          }
+        },
+        {
+          "name": "Create Case — validation error",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cases",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"not-a-number\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Expected: 400 Bad Request — demonstrates ValidationPipe whitelist + class-validator error response."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "List All Customers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customers",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers"]
+            },
+            "description": "Returns all customers. Seed data: 5 customers with varying riskScore values (25, 65, 85, 75, 85)."
+          }
+        },
+        {
+          "name": "Get Customer by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customers/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Metrics & Health",
+      "item": [
+        {
+          "name": "Get Metrics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["metrics"]
+            },
+            "description": "Returns case counts by status/stage, average DPD, and daily activity."
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Returns 200 OK. Used by Docker Compose health check: `curl -f http://localhost:3001/api/health`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Service is healthy', () => {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Workflows",
+      "description": "End-to-end sequences that demonstrate the full case lifecycle. Run requests in order.",
+      "item": [
+        {
+          "name": "1. Create new case (customer 2, loan 2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cases",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 2,\n  \"loanId\": 2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Customer 2 (Bob, riskScore=65) with loan 2 (dueDate=15 days ago → DPD≈15). Rule DPD_8_30 should match on assign."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('caseId', pm.response.json().id);",
+                  "  console.log('caseId set to', pm.response.json().id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Run rule engine assignment",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/cases/{{caseId}}/assign",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "{{caseId}}", "assign"]
+            },
+            "description": "Expects DPD_8_30 to match → HARD stage, Tier2 agent."
+          }
+        },
+        {
+          "name": "3. Log a contact attempt",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cases/{{caseId}}/actions",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "{{caseId}}", "actions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"CALL\",\n  \"outcome\": \"PROMISE_TO_PAY\",\n  \"notes\": \"Customer agreed to pay by end of week\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Status transitions OPEN → IN_PROGRESS."
+          }
+        },
+        {
+          "name": "4. Verify case state",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cases/{{caseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "{{caseId}}"]
+            },
+            "description": "Confirm: stage=HARD, status=IN_PROGRESS, actionLogs has 1 entry, decisions has matched rule."
+          }
+        },
+        {
+          "name": "5. Mark as paid (resolves case)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cases/{{caseId}}/actions",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "{{caseId}}", "actions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"CALL\",\n  \"outcome\": \"PAID\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "outcome=PAID → status transitions to RESOLVED."
+          }
+        },
+        {
+          "name": "6. Download PDF notice",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cases/{{caseId}}/notice.pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["cases", "{{caseId}}", "notice.pdf"]
+            },
+            "description": "Download the A4 payment reminder PDF. Save response to file in Postman to open it."
+          }
+        }
+      ]
+    }
+  ]
+}
