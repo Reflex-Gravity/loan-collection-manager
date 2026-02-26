@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateCaseDto } from './dto/create-case.dto';
@@ -9,6 +10,7 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import {
   Between,
   DataSource,
+  In,
   OptimisticLockVersionMismatchError,
   Repository,
 } from 'typeorm';
@@ -21,9 +23,12 @@ import { ActionLog } from './entities/action-log.entity';
 import { RuleDecision } from './entities/rule-decision.entity';
 import { differenceInDays } from '../common/utils/utils';
 import { RulesService } from '../rules/rules.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class CaseService {
+  private readonly logger = new Logger(CaseService.name);
+
   constructor(
     @InjectRepository(Case)
     private readonly caseRespository: Repository<Case>,
@@ -51,6 +56,7 @@ export class CaseService {
     const loan = await this.loanRepository.findOne({
       where: { id: dto.loanId },
     });
+
     if (!loan)
       throw new NotFoundException(`Loan with ${dto.loanId} loanId not found`);
 
@@ -66,6 +72,7 @@ export class CaseService {
       loanId: dto.loanId,
       dpd,
     });
+
     const saved = await this.caseRespository.save(caseRecord);
 
     const result = await this.caseRespository.findOne({
@@ -262,5 +269,56 @@ export class CaseService {
         reason: decision.reason,
       },
     };
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async recalculateDPDAndscheduleAssignment() {
+    const today = new Date();
+    this.logger.log('Starting scheduled assignment...');
+
+    const openCases = await this.caseRespository.find({
+      where: { status: In([CaseStatus.OPEN, CaseStatus.IN_PROGRESS]) },
+      relations: { loan: true, customer: true },
+    });
+
+    let updated = 0;
+    let escalated = 0;
+
+    for (const caseObj of openCases) {
+      const newDpd = Math.max(0, differenceInDays(today, caseObj.loan.dueDate));
+      if (newDpd !== caseObj.dpd) {
+        await this.caseRespository.update({ id: caseObj.id }, { dpd: newDpd });
+        updated++;
+
+        const oldBand = this.getDpdBand(caseObj.dpd);
+        const newBand = this.getDpdBand(newDpd);
+
+        // re-assign if the rule-band changes
+        if (oldBand !== newBand) {
+          try {
+            await this.assign(caseObj.id);
+            escalated++;
+            this.logger.log(
+              `Case ${caseObj.id} escalated: dpd ${caseObj.dpd} → ${newDpd} (${oldBand} → ${newBand})`,
+            );
+          } catch (err) {
+            this.logger.warn(
+              `Failed to escalate case ${caseObj.id}: ${(err as Error).message}`,
+            );
+          }
+        }
+      }
+    }
+
+    this.logger.log(
+      `DPD recalculation complete: ${updated} updated, ${escalated} escalated out of ${openCases.length} cases`,
+    );
+  }
+
+  private getDpdBand(dpd: number): string {
+    if (dpd <= 0) return 'NONE';
+    if (dpd <= 7) return 'SOFT';
+    if (dpd <= 30) return 'HARD';
+    return 'LEGAL';
   }
 }

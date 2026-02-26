@@ -6,7 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import databaseConfig from './config/database.config';
 import { CaseModule } from './cases/cases.module';
 import { CustomerModule } from './customers/customer.module';
-import { RulesModule } from './rules/rules.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -15,6 +15,7 @@ import { RulesModule } from './rules/rules.module';
       load: [databaseConfig],
     }),
     DbModule,
+    ScheduleModule.forRoot(),
     CaseModule,
     CustomerModule,
   ],
