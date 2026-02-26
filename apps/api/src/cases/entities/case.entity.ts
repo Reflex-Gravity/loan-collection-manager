@@ -8,6 +8,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  VersionColumn,
 } from 'typeorm';
 import { Customer } from '../../customers/customer.entity';
 import { Loan } from '../../loan/loan.entity';
@@ -42,6 +43,9 @@ export class Case {
 
   @Column({ name: 'assigned_group', nullable: true })
   assignedGroup!: string;
+
+  @VersionColumn({ default: 1 })
+  version!: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

@@ -30,7 +30,7 @@ export class RulesService<T, R> implements OnModuleInit {
     const value = this.getValue(entity, condition.field);
     const target = condition.value;
 
-    // Ensure value is comparable (basic type safety checks)
+    // validations (basic type safety checks)
     if (value === null || value === undefined) return false;
 
     switch (condition.operator) {

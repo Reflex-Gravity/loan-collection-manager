@@ -1,11 +1,17 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateCaseDto } from './dto/create-case.dto';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { Between, DataSource, Repository } from 'typeorm';
+import {
+  Between,
+  DataSource,
+  OptimisticLockVersionMismatchError,
+  Repository,
+} from 'typeorm';
 import { Case } from './entities/case.entity';
 import { Loan } from '../loan/loan.entity';
 import { ListCaseDto } from './dto/list-case.dto';
@@ -221,22 +227,41 @@ export class CaseService {
       return caseEntity;
     }
 
-    // start transaction for transactional safety
-    await this.dataSource.transaction(async (manager) => {
-      // 4. Update Case Entity
-      caseEntity.stage = decision.action.stage;
-      caseEntity.assignedTo = decision.action.assignedTo;
-      const savedCase = await manager.save(Case, caseEntity);
+    try {
+      // start transaction for transactional safety
+      await this.dataSource.transaction(async (manager) => {
+        // 4. Update Case Entity
+        caseEntity.stage = decision.action.stage;
+        caseEntity.assignedTo = decision.action.assignedTo;
+        const savedCase = await manager.save(Case, caseEntity);
 
-      // 5. Create Audit Log (RuleDecision) within the SAME transaction
-      const auditLog = new RuleDecision();
-      auditLog.case = savedCase;
-      auditLog.matchedRules = [decision.matchedRuleId]; // JSON array of rules
-      auditLog.reason = decision.reason; // Text explanation (e.g., "dpd=12 -> Tier2")
+        // 5. Create Audit Log (RuleDecision) within the SAME transaction
+        const auditLog = new RuleDecision();
+        auditLog.case = savedCase;
+        auditLog.matchedRules = [decision.matchedRuleId]; // JSON array of rules
+        auditLog.reason = decision.reason; // Text explanation (e.g., "dpd=12 -> Tier2")
 
-      await manager.save(RuleDecision, auditLog);
+        await manager.save(RuleDecision, auditLog);
 
-      return savedCase;
-    });
+        return savedCase;
+      });
+    } catch (err) {
+      if (err instanceof OptimisticLockVersionMismatchError) {
+        throw new ConflictException(
+          `Case ${caseId} was modified concurrently. Please retry.`,
+        );
+      }
+      throw err;
+    }
+    return {
+      caseId,
+      stage: decision.action.stage,
+      assignGroup: decision.action.assignedTo,
+      assignedTo: decision.action.assignedTo,
+      decision: {
+        matchedRules: decision.matchedRuleId,
+        reason: decision.reason,
+      },
+    };
   }
 }
